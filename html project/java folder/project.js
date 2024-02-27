@@ -1,59 +1,66 @@
-const months = [
-    'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
-];
+// Set the deadline date
+const deadline = new Date();
+deadline.setDate(deadline.getDate() + 10);
 
-const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-const giveaway = document.querySelector('.giveaway');
-const deadline = document.querySelector('.deadline');
-const items = document.querySelectorAll('.deadline-indicator h4');
-
-const futureDate = new Date();
-futureDate.setDate(futureDate.getDate() + 10);
-
-const year = futureDate.getFullYear();
-const hours = futureDate.getHours();
-const minutes = futureDate.getMinutes();
-const month = months[futureDate.getMonth()];
-const weekday = weekdays[futureDate.getDay()];
-const date = futureDate.getDate();
-
-giveaway.textContent = `giveaway ends on ${weekday}, ${date} ${month} ${year} at ${hours}:${minutes > 9 ? minutes : '0' + minutes}am`;
-
-const futureTime = futureDate.getTime();
-
-function getCountdownTimer() {
-    const today = new Date().getTime();
-    const remainingTime = futureTime - today;
-
-    const oneDay = 24 * 60 * 60 * 1000;
-    const oneHour = 60 * 60 * 1000;
-    const oneMinute = 60 * 1000;
-
-    let days = Math.floor(remainingTime / oneDay);
-    let hours = Math.floor((remainingTime % oneDay) / oneHour);
-    let minutes = Math.floor((remainingTime % oneHour) / oneMinute);
-    let seconds = Math.floor((remainingTime % oneMinute) / 1000);
-
-    const values = [days, hours, minutes, seconds];
-
-    function format(item) {
-        return item < 10 ? `0${item}` : item;
-    }
-
-    items.forEach((item, index) => {
-        item.innerHTML = format(values[index]);
-    });
+// Function to update the countdown timer display
+const updateCountdown = () => {
+    const now = new Date().getTime();
+    const remainingTime = deadline - now;
 
     if (remainingTime < 0) {
-        clearInterval(countdown);
-        deadline.innerHTML = `<h4 class="expired expired-message">Sorry,this giveaway has expired!<br/> Please check back soon.</h4>`;
-        const expiredMessage = document.querySelector('.expired-message');
-        expiredMessage.style.color = 'red';
-        expiredMessage.style.fontWeight = 'bold';
-        expiredMessage.textContent = expiredMessage.textContent.toUpperCase();
+        clearInterval(timer);
+        displayExpirationMessage();
+        return;
     }
-}
 
-let countdown = setInterval(getCountdownTimer, 1000);
-getCountdownTimer();
+    const { days, hours, minutes, seconds } = calculateTimeUnits(remainingTime);
+
+    updateTimerDisplay(days, hours, minutes, seconds);
+};
+
+// Function to calculate days, hours, minutes, and seconds from milliseconds
+const calculateTimeUnits = (time) => {
+    const days = Math.floor(time / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((time % (1000 * 60)) / 1000);
+
+    return { days, hours, minutes, seconds };
+};
+
+// Function to update the timer display with days, hours, minutes, and seconds
+const updateTimerDisplay = (days, hours, minutes, seconds) => {
+    document.querySelector('.days').textContent = formatTimeUnit(days);
+    document.querySelector('.hours').textContent = formatTimeUnit(hours);
+    document.querySelector('.minutes').textContent = formatTimeUnit(minutes);
+    document.querySelector('.seconds').textContent = formatTimeUnit(seconds);
+};
+
+// Function to format time units (add leading zero if needed)
+const formatTimeUnit = (value) => value.toString().padStart(2, '0');
+
+// Function to display expiration message
+const displayExpirationMessage = () => {
+    document.querySelector('.deadline').innerHTML = `<h4 class="expired-message">
+Sorry, this giveaway has expired!<br/> Please check back soon.</h4>`;
+    document.querySelector('.expired-message').classList.add('expired');
+};
+
+// Function to format the date
+const formatDate = (date) => {
+    const options = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+    };
+    return new Intl.DateTimeFormat('en-US', options).format(date);
+};
+
+// Initialize the countdown timer and display the formatted deadline
+updateCountdown();
+const timer = setInterval(updateCountdown, 1000);
+document.querySelector('.giveaway').textContent = `Giveaway ends on ${formatDate(deadline)}`;
